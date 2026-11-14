@@ -19,8 +19,12 @@ server and model; downloads the pinned Fono binary; verifies its SHA-256;
 installs into ~/.local; configures Fono to use local Ollama; starts the
 loopback-only MCP service; and creates user-session autostart entries.
 
-It does not install or download an AI model. It uses the already installed
-qwen2.5:1.5b model. It preserves an existing Fono config as
+It does not install or download an LLM. It uses the already installed
+qwen2.5:1.5b model. Fono downloads its local speech-recognition, wake-word,
+and speech-output assets on first use; those voice assets are separate from
+the Ollama language model. The profile uses Whisper base with four CPU
+threads to keep memory use more reasonable on an 8 GB laptop, and enables
+the on-device Supertonic TTS engine. It preserves an existing Fono config as
 config.toml.before-laika before writing the L.A.I.K.A. profile.
 
 ## Voice controls
