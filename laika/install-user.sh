@@ -70,6 +70,20 @@ backend = "network"
 url = "http://127.0.0.1:11434/v1/chat/completions"
 model = "$MODEL"
 
+# CPU-friendly local speech recognition and on-device speech output.
+[stt]
+backend = "local"
+
+[stt.local]
+model = "base"
+threads = 4
+
+[tts]
+backend = "local"
+
+[tts.local]
+engine = "supertonic"
+
 # Local wake-word detection: the microphone stays on-device while idle.
 [wakeword]
 enabled = true
