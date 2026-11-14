@@ -70,6 +70,15 @@ backend = "network"
 url = "http://127.0.0.1:11434/v1/chat/completions"
 model = "$MODEL"
 
+# Local wake-word detection: the microphone stays on-device while idle.
+[wakeword]
+enabled = true
+
+[[wakeword.phrases]]
+model = "hey_fono"
+sensitivity = 0.5
+target = "assistant"
+
 [assistant.tools]
 enabled = true
 
