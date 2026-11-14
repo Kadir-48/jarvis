@@ -71,7 +71,7 @@ def list_files(location, relative_path="."):
         raise ValueError("That folder does not exist.")
     entries = []
     for item in sorted(folder.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower())):
-        if item.name.startswith(".") or is_blocked(item):
+        if item.is_symlink() or item.name.startswith(".") or is_blocked(item):
             continue
         try:
             entries.append({"name": item.name, "type": "folder" if item.is_dir() else "file", "size_bytes": item.stat().st_size if item.is_file() else None})
@@ -95,7 +95,8 @@ def search_files(location, query, max_results=25):
             dirs[:] = []
         for name in files:
             visited += 1
-            if name.startswith(".") or is_blocked(Path(base) / name):
+            candidate = Path(base) / name
+            if candidate.is_symlink() or name.startswith(".") or is_blocked(candidate):
                 continue
             if query.casefold() in name.casefold():
                 full = Path(base) / name
