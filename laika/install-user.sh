@@ -75,7 +75,7 @@ model = "$MODEL"
 backend = "local"
 
 [stt.local]
-model = "base"
+model = "tiny"
 threads = 4
 
 [tts]
@@ -86,7 +86,7 @@ engine = "supertonic"
 
 # Local wake-word detection: the microphone stays on-device while idle.
 [wakeword]
-enabled = true
+enabled = false
 
 [[wakeword.phrases]]
 model = "hey_fono"
