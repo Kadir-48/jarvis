@@ -1,0 +1,17 @@
+{
+  "ollama_base_url": "http://127.0.0.1:11434",
+  "ollama_chat_model": "qwen2.5:1.5b",
+  "fast_model": "qwen2.5:1.5b",
+  "whisper_model": "base",
+  "whisper_compute_type": "int8",
+  "low_power_mode": true,
+  "tts_enabled": true,
+  "tts_engine": "piper",
+  "wake_word": "laika",
+  "wake_aliases": ["laika", "lyca", "laka"],
+  "location_enabled": false,
+  "location_auto_detect": false,
+  "background_tasks_enabled": false,
+  "agentic_max_turns": 4,
+  "planner_enabled": true
+}
