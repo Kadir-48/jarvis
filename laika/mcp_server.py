@@ -232,6 +232,16 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path not in {"/mcp", "/"}:
             self.send_json(404, {"error":"not found"}); return
+        # Reject DNS-rebinding / cross-origin browser requests. Fono's native
+        # client sends no Origin header; local web clients may use loopback.
+        host = self.headers.get("Host", "").split(":", 1)[0].strip("[]").lower()
+        if host not in {"127.0.0.1", "localhost", "::1"}:
+            self.send_json(403, {"error":"host not allowed"}); return
+        origin = self.headers.get("Origin")
+        if origin:
+            parsed_origin = urlparse(origin)
+            if parsed_origin.scheme not in {"http", "https"} or parsed_origin.hostname not in {"127.0.0.1", "localhost", "::1"}:
+                self.send_json(403, {"error":"origin not allowed"}); return
         try:
             length = int(self.headers.get("Content-Length", "0"))
             if length <= 0 or length > MAX_BODY:
