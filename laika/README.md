@@ -34,6 +34,7 @@ config.toml.before-laika before writing the L.A.I.K.A. profile.
 - Basic laptop status.
 - List and search files in Desktop, Documents, Downloads, LAIKA, Applications.
 - Read small text/source files.
+- Open safe documents, images, and media files in their normal desktop apps.
 - Find and launch installed desktop apps.
 - Open an explicitly requested website.
 
