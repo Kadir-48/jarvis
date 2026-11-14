@@ -247,7 +247,11 @@ class Handler(BaseHTTPRequestHandler):
             if length <= 0 or length > MAX_BODY:
                 self.send_json(413, {"error":"request size rejected"}); return
             request = json.loads(self.rfile.read(length))
+            if not isinstance(request, dict) or request.get("jsonrpc") != "2.0":
+                self.send_json(400, {"error":"invalid JSON-RPC 2.0 request"}); return
             method, request_id = request.get("method"), request.get("id")
+            if not isinstance(method, str):
+                self.send_json(400, {"error":"method must be a string"}); return
             if method == "notifications/initialized":
                 self.send_json(202); return
             if method == "initialize":
@@ -256,6 +260,8 @@ class Handler(BaseHTTPRequestHandler):
             elif method == "tools/list": result = {"tools":TOOLS}
             elif method == "tools/call":
                 params = request.get("params") or {}
+                if not isinstance(params, dict) or not isinstance(params.get("arguments", {}), dict):
+                    self.send_json(200, {"jsonrpc":"2.0","id":request_id,"error":{"code":-32602,"message":"Invalid params"}}); return
                 result = call_tool(params.get("name", ""), params.get("arguments") or {})
             else:
                 self.send_json(200, {"jsonrpc":"2.0","id":request_id,"error":{"code":-32601,"message":"Method not found"}}); return
