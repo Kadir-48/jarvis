@@ -1,73 +1,72 @@
-# L.A.I.K.A. local tools for Fono
+# L.A.I.K.A. local tools and voice foundation
 
-This folder is the first safe, local computer-tools layer for L.A.I.K.A.
-It is designed to work with Fono as the voice front end and an existing
-local Ollama model as the assistant brain.
+This folder contains the first working integration layer for L.A.I.K.A.
 
-## Why this design
+- Fono v0.20.1 CPU binary is the Linux voice front end.
+- Existing Ollama + qwen2.5:1.5b remains the local language model.
+- The MCP server supplies safe local laptop tools.
+- The installer is user-scoped: no sudo, apt, global Python packages, or
+  system-library replacement.
 
-- Fono supplies a lightweight Linux voice stack: hotkeys, local speech
-  recognition, spoken responses, wake-word option, history, and local model
-  support.
-- The local Ollama model remains the language model; no paid API is required.
-- This MCP server adds a separate tool layer for laptop tasks.
-- The first version is deliberately read-only except for opening an app or
-  website. It has no shell execution, file writes, deletion, package installs,
-  or administrator operations.
+## One-command setup
 
-## Supported actions
+From the repository root:
 
-- Read basic system status (OS, memory, free disk).
-- List files in Desktop, Documents, Downloads, LAIKA, and Applications.
-- Search file names in those locations.
-- Read small text/source files (64 KiB maximum).
-- Find and launch installed desktop applications.
-- Open an explicitly requested HTTP(S) website.
+    bash laika/install-user.sh
 
-Sensitive/hidden folders and common secret filenames are blocked. Paths are
-resolved before access so traversal and symlink escapes cannot leave the
-approved folders. The server binds only to 127.0.0.1.
+The script checks the CPU architecture, Python version, existing Ollama
+server and model; downloads the pinned Fono binary; verifies its SHA-256;
+installs into ~/.local; configures Fono to use local Ollama; starts the
+loopback-only MCP service; and creates user-session autostart entries.
 
-## Runtime
+It does not install or download an AI model. It uses the already installed
+qwen2.5:1.5b model. It preserves an existing Fono config as
+config.toml.before-laika before writing the L.A.I.K.A. profile.
 
-Requires Python 3.11+ and uses only the Python standard library.
+## Voice controls
 
-Start it with:
+- F7: dictate into the focused application.
+- F8: ask the local assistant and hear the reply.
+- Escape: cancel recording or stop speech.
 
-    python3 laika/mcp_server.py
+## First safe computer tools
 
-Health check: http://127.0.0.1:8765/health
-MCP endpoint: http://127.0.0.1:8765/mcp
+- Basic laptop status.
+- List and search files in Desktop, Documents, Downloads, LAIKA, Applications.
+- Read small text/source files.
+- Find and launch installed desktop apps.
+- Open an explicitly requested website.
 
-No sudo, pip install, virtual environment, or extra Python packages are
-required for this tool server.
+The tools server binds only to 127.0.0.1. It has no shell execution,
+arbitrary file writes, file deletion, package installation, or admin tools.
+Sensitive/hidden paths and common secret filenames are blocked.
 
-## Connect it to Fono
+## Important limits
 
-In Fono settings, enable Assistant → Tools & actions, then add an MCP server:
-- Name: LAIKA Local Tools
-- URL: http://127.0.0.1:8765/mcp
+The initial 1.5B model is small and may make mistakes, especially with tool
+selection. The first version is deliberately limited to low-risk operations.
+File modification, sending messages, account changes, installations and
+irreversible actions are not exposed as tools.
 
-Fono supports Streamable HTTP MCP endpoints for URLs that do not end in /sse.
-Keep this endpoint on loopback; do not expose it to the LAN.
+The Fono release is built on Ubuntu 22.04 (glibc 2.35), so its Linux binary
+has a lower glibc baseline than the Jarvis archive that failed on Mint.
+Linux Mint 22.3's glibc 2.39 satisfies that baseline. The binary is pinned
+to v0.20.1 and verified by SHA-256 before installation.
 
-Equivalent TOML configuration:
+## Remove only this L.A.I.K.A. layer
 
-    [assistant.tools]
-    enabled = true
+Stop and disable the user service (if systemd user services are available):
 
-    [[assistant.tools.mcp]]
-    name = "LAIKA Local Tools"
-    url = "http://127.0.0.1:8765/mcp"
+    systemctl --user disable --now laika-mcp.service
 
-## Current limitations
+Then remove only these L.A.I.K.A.-created paths:
 
-This is a safe first layer, not yet a full autonomous desktop operator.
-It intentionally does not execute terminal commands, install software,
-modify files, send messages, or perform irreversible actions. Those
-capabilities need explicit user confirmation and narrow allowlists before
-they are added.
+    ~/.config/systemd/user/laika-mcp.service
+    ~/.config/autostart/laika-mcp.desktop
+    ~/.config/autostart/laika-fono.desktop
+    ~/.local/share/laika
+    ~/.local/bin/fono
+    ~/.config/fono/config.toml
 
-Fono's normal desktop installer currently uses administrator privileges.
-The MCP server itself does not. A no-admin Fono runtime path must be verified
-on the target Linux Mint machine before claiming the complete setup is ready.
+Do not remove Ollama or its model. The installer keeps the prior Fono config
+as config.toml.before-laika if one existed.
