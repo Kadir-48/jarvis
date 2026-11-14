@@ -20,11 +20,10 @@ installs into ~/.local; configures Fono to use local Ollama; starts the
 loopback-only MCP service; and creates user-session autostart entries.
 
 It does not install or download an LLM. It uses the already installed
-qwen2.5:1.5b model. Fono downloads its local speech-recognition, wake-word,
-and speech-output assets on first use; those voice assets are separate from
-the Ollama language model. The profile uses Whisper base with four CPU
-threads to keep memory use more reasonable on an 8 GB laptop, and enables
-the on-device Supertonic TTS engine. It preserves an existing Fono config as
+qwen2.5:1.5b model. Fono downloads its local speech-recognition and speech-output assets on first use; those voice assets are separate from
+the Ollama language model. The profile uses the supported multilingual Whisper tiny model with four CPU
+threads to keep memory use low on an 8 GB laptop, and enables the on-device
+Supertonic TTS engine. It preserves an existing Fono config as
 config.toml.before-laika before writing the L.A.I.K.A. profile.
 
 ## Voice controls
@@ -32,12 +31,11 @@ config.toml.before-laika before writing the L.A.I.K.A. profile.
 - F7: dictate into the focused application.
 - F8: ask the local assistant and hear the reply.
 - Escape: cancel recording or stop speech.
-- Wake phrase: “Hey Fono” starts the assistant hands-free.
+- Wake phrase: disabled for now; the “Hey Fono” model file is not published yet.
 
-The installer enables Fono's on-device wake-word detector. The microphone is
-listened to locally while waiting for the phrase; idle audio is not sent to
-Ollama or a cloud speech service. You can turn this off by setting
-`[wakeword].enabled = false` in `~/.config/fono/config.toml`.
+Wake-word detection is disabled because Fono v0.20.1 currently returns HTTP 404
+for its “Hey Fono” model asset. F7 and F8 remain available as the reliable
+voice controls. No cloud speech service is configured.
 
 ## First safe computer tools
 
