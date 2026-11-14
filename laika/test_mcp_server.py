@@ -23,6 +23,20 @@ class SafetyTests(unittest.TestCase):
         self.assertNotIn("run_command", names)
         self.assertNotIn("delete_file", names)
         self.assertNotIn("write_file", names)
+    def test_open_file_blocks_scripts(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            script = root / "unsafe.sh"
+            script.write_text("echo unsafe")
+            previous = module.ROOTS["Documents"]
+            module.ROOTS["Documents"] = root
+            try:
+                with self.assertRaises(ValueError):
+                    module.open_file("Documents", "unsafe.sh")
+            finally:
+                module.ROOTS["Documents"] = previous
+
     def test_system_status_has_expected_fields(self):
         result = module.system_status()
         self.assertIn("architecture", result)
