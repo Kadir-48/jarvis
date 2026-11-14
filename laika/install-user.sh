@@ -106,7 +106,23 @@ LockPersonality=true
 WantedBy=default.target
 EOF
   systemctl --user daemon-reload
-  systemctl --user enable --now laika-mcp.service
+  if ! systemctl --user enable --now laika-mcp.service; then
+    echo "User systemd could not start the tools service; switching to desktop autostart."
+    systemctl --user disable --now laika-mcp.service >/dev/null 2>&1 || true
+    rm -f "$UNIT_DIR/laika-mcp.service"
+    cat >"$AUTOSTART/laika-mcp.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=L.A.I.K.A. Local Tools
+Comment=Start the local L.A.I.K.A. tools service
+Exec=$PYTHON $APP_DATA/mcp_server.py
+Terminal=false
+X-GNOME-Autostart-enabled=true
+EOF
+    if ! curl -fsS --max-time 1 http://127.0.0.1:8765/health >/dev/null 2>&1; then
+      nohup "$PYTHON" "$APP_DATA/mcp_server.py" >>"$APP_STATE/mcp.log" 2>&1 </dev/null &
+    fi
+  fi
 else
   cat >"$AUTOSTART/laika-mcp.desktop" <<EOF
 [Desktop Entry]
