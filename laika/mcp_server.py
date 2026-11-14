@@ -137,7 +137,8 @@ def desktop_entries():
                     continue
                 name = section.get("Name", "").strip()
                 if name:
-                    found[file.stem] = name
+                    desktop_id = file.relative_to(root).as_posix()[:-8]
+                    found[desktop_id] = name
             except (OSError, KeyError, ValueError):
                 continue
     return found
@@ -159,6 +160,24 @@ def open_application(desktop_id):
     subprocess.Popen([launcher, desktop_id], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
     return "Opened " + apps[desktop_id] + "."
 
+def open_file(location, path):
+    file_path = safe_path(location, path)
+    if not file_path.is_file():
+        raise ValueError("That file does not exist.")
+    safe_extensions = {".pdf", ".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg",
+                       ".mp4", ".mkv", ".mp3", ".wav", ".ogg", ".flac",
+                       ".txt", ".md", ".csv", ".docx", ".xlsx", ".pptx",
+                       ".odt", ".ods", ".odp"}
+    if file_path.suffix.lower() not in safe_extensions:
+        raise ValueError("For safety, this file type cannot be launched or opened by the assistant.")
+    opener = shutil.which("xdg-open")
+    if not opener:
+        raise RuntimeError("xdg-open is unavailable.")
+    subprocess.Popen([opener, str(file_path)], stdin=subprocess.DEVNULL,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     start_new_session=True)
+    return "Opened " + file_path.name + "."
+
 def open_website(url):
     parsed = urlparse(url.strip())
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
@@ -176,6 +195,7 @@ TOOLS = [
  {"name":"read_text_file","description":"Read a small text or source-code file in an approved folder. Maximum 64 KiB. Hidden and sensitive paths are blocked.","inputSchema":{"type":"object","properties":{"location":{"type":"string","enum":list(ROOTS)},"path":{"type":"string","description":"File path relative to selected location."}},"required":["location","path"],"additionalProperties":False}},
  {"name":"find_applications","description":"Find installed desktop applications by visible name. Does not launch anything.","inputSchema":{"type":"object","properties":{"query":{"type":"string"}},"additionalProperties":False}},
  {"name":"open_application","description":"Launch an installed desktop application by desktop_id returned by find_applications. Does not run arbitrary shell commands.","inputSchema":{"type":"object","properties":{"desktop_id":{"type":"string"}},"required":["desktop_id"],"additionalProperties":False}},
+ {"name":"open_file","description":"Open a safe document, image, or media file in an approved folder using its normal desktop application. Executables and scripts are blocked.","inputSchema":{"type":"object","properties":{"location":{"type":"string","enum":list(ROOTS)},"path":{"type":"string"}},"required":["location","path"],"additionalProperties":False}},
  {"name":"open_website","description":"Open a user-requested HTTP or HTTPS URL in the default browser.","inputSchema":{"type":"object","properties":{"url":{"type":"string"}},"required":["url"],"additionalProperties":False}},
 ]
 
@@ -187,6 +207,7 @@ def call_tool(name, args):
         elif name == "read_text_file": value = read_text_file(args["location"], args["path"])
         elif name == "find_applications": value = find_applications(args.get("query", ""))
         elif name == "open_application": value = open_application(args["desktop_id"])
+        elif name == "open_file": value = open_file(args["location"], args["path"])
         elif name == "open_website": value = open_website(args["url"])
         else: return text_result("Unknown tool: " + name, True)
         return text_result(value)
