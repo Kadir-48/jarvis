@@ -106,5 +106,18 @@ class HTTPProtocolTests(unittest.TestCase):
         self.assertIn("get_system_status", names)
         self.assertNotIn("run_command", names)
 
+
+class ConfigurationTests(unittest.TestCase):
+    def test_example_config_is_valid_and_uses_only_local_services(self):
+        import tomllib
+        config_path = Path(__file__).with_name("fono-config.toml.example")
+        config = tomllib.loads(config_path.read_text(encoding="utf-8"))
+        self.assertEqual(config["assistant"]["backend"], "network")
+        self.assertEqual(config["assistant"]["network"]["url"], "http://127.0.0.1:11434/v1/chat/completions")
+        self.assertEqual(config["assistant"]["network"]["model"], "qwen2.5:1.5b")
+        self.assertTrue(config["wakeword"]["enabled"])
+        self.assertEqual(config["wakeword"]["phrases"][0]["target"], "assistant")
+        self.assertEqual(config["assistant"]["tools"]["mcp"][0]["url"], "http://127.0.0.1:8765/mcp")
+
 if __name__ == "__main__":
     unittest.main()
