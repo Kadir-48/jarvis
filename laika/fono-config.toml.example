@@ -1,0 +1,7 @@
+# Add to Fono's config.toml after installing Fono.
+[assistant.tools]
+enabled = true
+
+[[assistant.tools.mcp]]
+name = "LAIKA Local Tools"
+url = "http://127.0.0.1:8765/mcp"
