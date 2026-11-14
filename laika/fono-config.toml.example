@@ -14,7 +14,7 @@ model = "qwen2.5:1.5b"
 backend = "local"
 
 [stt.local]
-model = "base"
+model = "tiny"
 threads = 4
 
 # Local speech output; voice assets are downloaded on first use.
@@ -26,7 +26,7 @@ engine = "supertonic"
 
 # Optional hands-free activation; detection runs locally on the laptop.
 [wakeword]
-enabled = true
+enabled = false
 
 [[wakeword.phrases]]
 model = "hey_fono"
