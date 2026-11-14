@@ -28,6 +28,12 @@ config.toml.before-laika before writing the L.A.I.K.A. profile.
 - F7: dictate into the focused application.
 - F8: ask the local assistant and hear the reply.
 - Escape: cancel recording or stop speech.
+- Wake phrase: “Hey Fono” starts the assistant hands-free.
+
+The installer enables Fono's on-device wake-word detector. The microphone is
+listened to locally while waiting for the phrase; idle audio is not sent to
+Ollama or a cloud speech service. You can turn this off by setting
+`[wakeword].enabled = false` in `~/.config/fono/config.toml`.
 
 ## First safe computer tools
 
