@@ -42,5 +42,69 @@ class SafetyTests(unittest.TestCase):
         self.assertIn("architecture", result)
         self.assertIn("home_disk_gb", result)
 
+
+class HTTPProtocolTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        import threading
+        from http.server import ThreadingHTTPServer
+        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), module.Handler)
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+        cls.port = cls.server.server_address[1]
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+        cls.thread.join(timeout=2)
+
+    def request(self, path, payload=None, headers=None):
+        from http.client import HTTPConnection
+        connection = HTTPConnection("127.0.0.1", self.port, timeout=3)
+        body = None if payload is None else __import__("json").dumps(payload)
+        request_headers = {"Host": f"127.0.0.1:{self.port}"}
+        if body is not None:
+            request_headers["Content-Type"] = "application/json"
+        request_headers.update(headers or {})
+        connection.request("GET" if payload is None else "POST", path, body=body, headers=request_headers)
+        response = connection.getresponse()
+        result = response.read()
+        status = response.status
+        connection.close()
+        return status, result
+
+    def test_health_endpoint(self):
+        status, body = self.request("/health")
+        self.assertEqual(status, 200)
+        self.assertIn(b'"status": "ok"', body)
+
+    def test_initialize_handshake(self):
+        status, body = self.request("/mcp", {
+            "jsonrpc": "2.0", "id": 1, "method": "initialize",
+            "params": {"protocolVersion": "2025-03-26", "capabilities": {}, "clientInfo": {"name": "test", "version": "1"}}
+        })
+        self.assertEqual(status, 200)
+        payload = __import__("json").loads(body)
+        self.assertEqual(payload["id"], 1)
+        self.assertIn("tools", payload["result"]["capabilities"])
+
+    def test_rejects_untrusted_host_header(self):
+        status, _ = self.request("/mcp", {"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+                                 {"Host": "attacker.example"})
+        self.assertEqual(status, 403)
+
+    def test_rejects_non_loopback_origin(self):
+        status, _ = self.request("/mcp", {"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+                                 {"Origin": "https://attacker.example"})
+        self.assertEqual(status, 403)
+
+    def test_tools_list(self):
+        status, body = self.request("/mcp", {"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
+        self.assertEqual(status, 200)
+        names = {item["name"] for item in __import__("json").loads(body)["result"]["tools"]}
+        self.assertIn("get_system_status", names)
+        self.assertNotIn("run_command", names)
+
 if __name__ == "__main__":
     unittest.main()
