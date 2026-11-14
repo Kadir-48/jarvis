@@ -9,6 +9,21 @@ backend = "network"
 url = "http://127.0.0.1:11434/v1/chat/completions"
 model = "qwen2.5:1.5b"
 
+# CPU-friendly local speech recognition.
+[stt]
+backend = "local"
+
+[stt.local]
+model = "base"
+threads = 4
+
+# Local speech output; voice assets are downloaded on first use.
+[tts]
+backend = "local"
+
+[tts.local]
+engine = "supertonic"
+
 # Optional hands-free activation; detection runs locally on the laptop.
 [wakeword]
 enabled = true
