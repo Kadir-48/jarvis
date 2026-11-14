@@ -1,4 +1,14 @@
-# Add to Fono's config.toml after installing Fono.
+# L.A.I.K.A. profile for Fono.
+# The local Ollama server remains the language model; no cloud API is used.
+
+[assistant]
+enabled = true
+backend = "network"
+
+[assistant.network]
+url = "http://127.0.0.1:11434/v1/chat/completions"
+model = "qwen2.5:1.5b"
+
 [assistant.tools]
 enabled = true
 
